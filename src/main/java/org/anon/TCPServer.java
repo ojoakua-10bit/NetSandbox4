@@ -37,14 +37,18 @@ public class TCPServer {
             try {
                 Socket socket = serverSocket.accept();
                 id = new Scanner(socket.getInputStream()).nextLine();
-                if (clients.get(id) == null) {
+                if (!id.matches("\\w+")) {
+                    new PrintWriter(socket.getOutputStream(), true).println("Invalid nickname: " + id);
+                    socket.close();
+                }
+                else if (clients.get(id) == null) {
                     ClientHandler handler = new ClientHandler(socket, id, clients);
                     handler.start();
                     clients.put(id, handler);
                     System.out.println("New client connected with ID: " + id);
                 }
                 else {
-                    new PrintWriter(socket.getOutputStream(), true).println("User " + id + " already registered");
+                    new PrintWriter(socket.getOutputStream(), true).println("Nickname " + id + " already used");
                     socket.close();
                 }
             }
@@ -65,13 +69,11 @@ public class TCPServer {
     }
 
     public static void main(String[] args) {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Server closed!");
-        }));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> System.out.println("Server closed!")));
 
-        if (args.length > 1) {
+        if (args.length == 1) {
             try {
-                port = Integer.parseInt(args[1]);
+                port = Integer.parseInt(args[0]);
             }
             catch (NumberFormatException e) {
                 System.out.println("Invalid port number! Using default value");

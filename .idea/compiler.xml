@@ -12,7 +12,7 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="MavenTest" target="1.5" />
-      <module name="NetSandbox4" target="1.5" />
+      <module name="NetSandbox4" target="8" />
     </bytecodeTargetLevel>
   </component>
 </project>

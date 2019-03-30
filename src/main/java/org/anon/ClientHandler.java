@@ -92,6 +92,12 @@ public class ClientHandler extends Thread {
                 if (token.length == 1) oStream.println("-- Invalid kick syntax --");
                 else kickUser(token[1]);
                 break;
+            case "/register":
+                registerUser();
+                break;
+            case "/chpass":
+                changePassword();
+                break;
             default:
                 boolean isBroadcastMessage = true;
 
@@ -108,6 +114,69 @@ public class ClientHandler extends Thread {
         return true;
     }
 
+    private void registerUser() {
+        try (DBUtil db = new DBUtil()) {
+            if (db.isRegisteredUser(clientID)) {
+                oStream.println("-- You're already registered --");
+            }
+            else {
+                String password, rePassword;
+                oStream.println("-- Enter your new password --");
+                oStream.println("/auth");
+                password = iStream.nextLine();
+                oStream.println("-- Re-enter your new password --");
+                oStream.println("/auth");
+                rePassword = iStream.nextLine();
+                if (password.matches(".{8,}")) {
+                    if (password.equals(rePassword)) {
+                        try {
+                            db.registerUser(clientID, password);
+                            oStream.println("-- Your name registered successfully --");
+                        } catch (DBUtilException e) {
+                            oStream.println("-- An error has occurred while registering your name --");
+                        }
+                    } else oStream.println("-- Password mismatch --");
+                } else oStream.println("-- Password should be 8 characters or more --");
+            }
+        }
+        catch (DBUtilException | IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private void changePassword() {
+        try (DBUtil db = new DBUtil()) {
+            if (!db.isRegisteredUser(clientID)) {
+                oStream.println("-- Your name haven't registered yet --");
+            }
+            else {
+                oStream.println("-- Enter the old password --");
+                if (auth(clientID)) {
+                    String newPassword, reNewPassword;
+                    oStream.println("-- Enter your new password --");
+                    oStream.println("/auth");
+                    newPassword = iStream.nextLine();
+                    oStream.println("-- Re-enter your new password --");
+                    oStream.println("/auth");
+                    reNewPassword = iStream.nextLine();
+                    if (newPassword.matches(".{8,}")) {
+                        if (newPassword.equals(reNewPassword)) {
+                            try {
+                                db.changePassword(clientID, newPassword);
+                                oStream.println("-- Your password changed successfully --");
+                            } catch (DBUtilException e) {
+                                oStream.println("-- An error has occurred while changing your password --");
+                            }
+                        } else oStream.println("-- Password mismatch --");
+                    } else oStream.println("-- Password should be 8 characters or more --");
+                }
+            }
+        }
+        catch (DBUtilException | IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     private void kickUser(String username) {
         try (DBUtil db = new DBUtil()) {
             if (db.isRegisteredUser(clientID)) {
@@ -120,7 +189,7 @@ public class ClientHandler extends Thread {
                     } else oStream.println("-- Nickname not found --");
                 }
             } else oStream.println("-- You don't have privileges to kick user! --\n" +
-                        "-- Only admins and moderators can kick user --");
+                        "-- Only registered users can kick other user --");
         }
         catch (IOException | DBUtilException e) {
             System.out.println("An error has occurred\n" + e.getMessage());
@@ -146,7 +215,7 @@ public class ClientHandler extends Thread {
             String password = iStream.nextLine();
 
             if (!db.authenticateUser(name, password)) {
-                oStream.println("Wrong password!");
+                oStream.println("-- Wrong password! --");
                 return false;
             }
             return true;
