@@ -56,7 +56,7 @@ public class DBUtil implements Closeable {
     public void registerUser(String username, String password) throws DBUtilException {
         try {
             statement = connection.createStatement();
-            statement.executeQuery("INSERT users (username, password) VALUES ('" + username
+            statement.executeQuery("INSERT INTO users (username, password) VALUES ('" + username
                     + "', '" + Digestive.md5(password) +"');");
             statement.close();
         } catch (SQLException e) {
