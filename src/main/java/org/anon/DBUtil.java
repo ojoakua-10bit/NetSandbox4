@@ -56,7 +56,7 @@ public class DBUtil implements Closeable {
     public void registerUser(String username, String password) throws DBUtilException {
         try {
             statement = connection.createStatement();
-            statement.executeQuery("INSERT INTO users (username, password) VALUES ('" + username
+            statement.executeUpdate("INSERT INTO users (username, password) VALUES ('" + username
                     + "', '" + Digestive.md5(password) +"');");
             statement.close();
         } catch (SQLException e) {
@@ -67,7 +67,7 @@ public class DBUtil implements Closeable {
     public void changePassword(String username, String newPassword) throws DBUtilException {
         try {
             statement = connection.createStatement();
-            statement.executeQuery("UPDATE users SET password='" + Digestive.md5(newPassword)
+            statement.executeUpdate("UPDATE users SET password='" + Digestive.md5(newPassword)
                     + "' WHERE username='" + username + "';");
             statement.close();
         } catch (SQLException e) {

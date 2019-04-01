@@ -114,29 +114,44 @@ public class ClientHandler extends Thread {
         return true;
     }
 
+    private String registerNewPassword() {
+        String password, rePassword;
+        oStream.println("-- Enter your new password --");
+        oStream.println("/auth");
+        password = iStream.nextLine();
+        oStream.println("-- Re-enter your new password --");
+        oStream.println("/auth");
+        rePassword = iStream.nextLine();
+        if (password.matches(".{8,}")) {
+            if (password.equals(rePassword)) return password;
+            else {
+                oStream.println("-- Password mismatch --");
+                return null;
+            }
+        }
+        else {
+            oStream.println("-- Password should be 8 characters or more --");
+            return null;
+        }
+    }
+
     private void registerUser() {
         try (DBUtil db = new DBUtil()) {
             if (db.isRegisteredUser(clientID)) {
                 oStream.println("-- You're already registered --");
             }
             else {
-                String password, rePassword;
-                oStream.println("-- Enter your new password --");
-                oStream.println("/auth");
-                password = iStream.nextLine();
-                oStream.println("-- Re-enter your new password --");
-                oStream.println("/auth");
-                rePassword = iStream.nextLine();
-                if (password.matches(".{8,}")) {
-                    if (password.equals(rePassword)) {
-                        try {
-                            db.registerUser(clientID, password);
-                            oStream.println("-- Your name registered successfully --");
-                        } catch (DBUtilException e) {
-                            oStream.println("-- An error has occurred while registering your name --");
-                        }
-                    } else oStream.println("-- Password mismatch --");
-                } else oStream.println("-- Password should be 8 characters or more --");
+                String password = registerNewPassword();
+
+                if (password != null) {
+                    try {
+                        db.registerUser(clientID, password);
+                        oStream.println("-- Your name registered successfully --");
+                    } catch (DBUtilException e) {
+                        System.out.println(e.getMessage());
+                        oStream.println("-- An error has occurred while registering your name --");
+                    }
+                }
             }
         }
         catch (DBUtilException | IOException e) {
@@ -152,23 +167,17 @@ public class ClientHandler extends Thread {
             else {
                 oStream.println("-- Enter the old password --");
                 if (auth(clientID)) {
-                    String newPassword, reNewPassword;
-                    oStream.println("-- Enter your new password --");
-                    oStream.println("/auth");
-                    newPassword = iStream.nextLine();
-                    oStream.println("-- Re-enter your new password --");
-                    oStream.println("/auth");
-                    reNewPassword = iStream.nextLine();
-                    if (newPassword.matches(".{8,}")) {
-                        if (newPassword.equals(reNewPassword)) {
-                            try {
-                                db.changePassword(clientID, newPassword);
-                                oStream.println("-- Your password changed successfully --");
-                            } catch (DBUtilException e) {
-                                oStream.println("-- An error has occurred while changing your password --");
-                            }
-                        } else oStream.println("-- Password mismatch --");
-                    } else oStream.println("-- Password should be 8 characters or more --");
+                    String password = registerNewPassword();
+
+                    if (password != null) {
+                        try {
+                            db.changePassword(clientID, password);
+                            oStream.println("-- Your password changed successfully --");
+                        } catch (DBUtilException e) {
+                            System.out.println(e.getMessage());
+                            oStream.println("-- An error has occurred while changing your password --");
+                        }
+                    }
                 }
             }
         }
